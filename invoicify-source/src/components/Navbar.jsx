@@ -22,6 +22,15 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [open])
+
   return (
     <header
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
@@ -35,7 +44,7 @@ export default function Navbar() {
               ? 'glass shadow-elevation-2 py-2.5'
               : 'bg-transparent py-2'
           }`}
-          style={scrolled ? { boxShadow: 'var(--shadow-elevation-2)' } : undefined}
+          style={scrolled ? { boxShadow: 'var(--shadow-elevation-2)', background: 'rgba(255,255,255,0.95)' } : undefined}
         >
           <a href="#home" className="flex items-center gap-2.5 shrink-0">
             <span className="grid place-items-center w-9 h-9 rounded-xl bg-primary text-white shadow-[0_6px_16px_rgba(37,99,235,0.35)]">
@@ -84,7 +93,10 @@ export default function Navbar() {
               transition={{ duration: 0.25, ease: 'easeOut' }}
               className="md:hidden overflow-hidden"
             >
-              <div className="mt-2 glass rounded-2xl p-4 flex flex-col gap-1 shadow-elevation-3">
+              <div
+                className="mt-2 glass rounded-2xl p-4 flex flex-col gap-1 shadow-elevation-3"
+                style={{ background: 'rgba(255,255,255,0.97)' }}
+              >
                 {links.map((link) => (
                   <a
                     key={link.label}

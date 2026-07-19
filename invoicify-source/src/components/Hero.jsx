@@ -117,7 +117,7 @@ export default function Hero() {
 
           {/* Analytics badge - back layer */}
           <FloatCard
-            className="absolute top-6 left-2 sm:left-6 w-44"
+            className="absolute top-6 left-2 sm:left-6 w-36 sm:w-44"
             depth={40}
             floatDelay={0}
           >
@@ -139,7 +139,7 @@ export default function Hero() {
 
           {/* Cloud storage badge - mid layer */}
           <FloatCard
-            className="absolute bottom-16 left-0 sm:left-4 w-40"
+            className="absolute bottom-12 sm:bottom-16 left-0 sm:left-4 w-36 sm:w-40"
             depth={70}
             floatDelay={0.6}
           >
@@ -156,7 +156,7 @@ export default function Hero() {
 
           {/* Main invoice card - front/center layer */}
           <FloatCard
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] sm:w-[320px]"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[240px] sm:w-[320px]"
             depth={120}
             floatDelay={0.3}
             main
@@ -191,7 +191,7 @@ export default function Hero() {
 
           {/* PDF export badge - front-right layer */}
           <FloatCard
-            className="absolute bottom-2 right-0 sm:right-4 w-36"
+            className="absolute bottom-2 right-0 sm:right-4 w-32 sm:w-36"
             depth={150}
             floatDelay={0.9}
           >

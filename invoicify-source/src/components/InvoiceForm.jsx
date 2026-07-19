@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useFieldArray } from 'react-hook-form'
 import { AnimatePresence } from 'framer-motion'
-import { Loader2, RotateCcw, Sparkles } from 'lucide-react'
+import { Loader2, Plus, RotateCcw, Sparkles, Trash2 } from 'lucide-react'
 import Button from './ui/Button'
 import Reveal from './ui/Reveal'
 import SectionHeading from './ui/SectionHeading'
@@ -21,6 +21,7 @@ export default function InvoiceForm() {
     handleSubmit,
     reset,
     watch,
+    control,
     formState: { errors },
   } = useForm({
     mode: 'onBlur',
@@ -28,21 +29,25 @@ export default function InvoiceForm() {
       customerName: '',
       customerEmail: '',
       companyName: '',
-      productName: '',
-      quantity: 1,
-      unitPrice: '',
+      companyEmail: '',
+      template: 'professional',
+      items: [{ productName: '', quantity: 1, unitPrice: '' }],
       tax: 0,
       discount: 0,
       notes: '',
     },
   })
 
-  const quantity = Number(watch('quantity')) || 0
-  const unitPrice = Number(watch('unitPrice')) || 0
+  const { fields, append, remove } = useFieldArray({ control, name: 'items' })
+
+  const items = watch('items')
   const tax = Number(watch('tax')) || 0
   const discount = Number(watch('discount')) || 0
 
-  const subtotal = quantity * unitPrice
+  const subtotal = (items || []).reduce(
+    (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0),
+    0
+  )
   const taxAmount = subtotal * (tax / 100)
   const total = Math.max(subtotal + taxAmount - discount, 0)
 
@@ -51,9 +56,13 @@ export default function InvoiceForm() {
       customer: data.customerName,
       email: data.customerEmail,
       company: data.companyName,
-      product: data.productName,
-      quantity: data.quantity,
-      price: data.unitPrice,
+      companyEmail: data.companyEmail,
+      template: data.template,
+      items: data.items.map((item) => ({
+        product: item.productName,
+        quantity: Number(item.quantity),
+        price: Number(item.unitPrice),
+      })),
       tax: data.tax,
       discount: data.discount,
       notes: data.notes,
@@ -61,7 +70,7 @@ export default function InvoiceForm() {
 
     setLoading(true)
     try {
-      const response = await fetch('https://n8n.srv1208284.hstgr.cloud/webhook/generate-invoice', {
+      const response = await fetch('https://n8n.srv1208284.hstgr.cloud/webhook-test/generate-invoice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -133,41 +142,99 @@ export default function InvoiceForm() {
                     {...register('companyName', { required: 'Company name is required' })}
                   />
                 </Field>
+                <Field label="Company email" error={errors.companyEmail}>
+                  <input
+                    type="email"
+                    className={fieldBase}
+                    placeholder="hello@invoicify.app"
+                    {...register('companyEmail', {
+                      required: 'Company email is required',
+                      pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Enter a valid email address' },
+                    })}
+                  />
+                </Field>
               </FormSection>
 
-              <FormSection title="Line item">
-                <Field label="Product / service name" error={errors.productName} full>
-                  <input
+              <FormSection title="Template">
+                <Field label="Select template" error={errors.template}>
+                  <select
                     className={fieldBase}
-                    placeholder="Brand identity design"
-                    {...register('productName', { required: 'Product name is required' })}
-                  />
+                    {...register('template', { required: 'Template is required' })}
+                  >
+                    <option value="minimal">Minimal</option>
+                    <option value="business">Business</option>
+                    <option value="professional">Professional</option>
+                    {/* <option value="classic">Classic</option>
+                    <option value="creative">Creative</option> */}
+                  </select>
                 </Field>
-                <Field label="Quantity" error={errors.quantity}>
-                  <input
-                    type="number"
-                    step="1"
-                    className={fieldBase}
-                    {...register('quantity', {
-                      required: 'Quantity is required',
-                      valueAsNumber: true,
-                      validate: (v) => v > 0 || 'Quantity must be positive',
-                    })}
-                  />
-                </Field>
-                <Field label="Unit price ($)" error={errors.unitPrice}>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className={fieldBase}
-                    placeholder="0.00"
-                    {...register('unitPrice', {
-                      required: 'Unit price is required',
-                      valueAsNumber: true,
-                      validate: (v) => v > 0 || 'Unit price must be positive',
-                    })}
-                  />
-                </Field>
+              </FormSection>
+
+              <FormSection title="Line items">
+                {fields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className="sm:col-span-2 bg-section rounded-xl p-4 border border-border"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-semibold text-paragraph">Item {index + 1}</span>
+                      {fields.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => remove(index)}
+                          className="text-red-400 hover:text-red-600 transition-colors p-1"
+                          title="Remove item"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <Field label="Product / service name" error={errors.items?.[index]?.productName} full>
+                        <input
+                          className={fieldBase}
+                          placeholder="Brand identity design"
+                          {...register(`items.${index}.productName`, { required: 'Product name is required' })}
+                        />
+                      </Field>
+                      <Field label="Quantity" error={errors.items?.[index]?.quantity}>
+                        <input
+                          type="number"
+                          step="1"
+                          className={fieldBase}
+                          {...register(`items.${index}.quantity`, {
+                            required: 'Quantity is required',
+                            valueAsNumber: true,
+                            validate: (v) => v > 0 || 'Quantity must be positive',
+                          })}
+                        />
+                      </Field>
+                      <Field label="Unit price ($)" error={errors.items?.[index]?.unitPrice}>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className={fieldBase}
+                          placeholder="0.00"
+                          {...register(`items.${index}.unitPrice`, {
+                            required: 'Unit price is required',
+                            valueAsNumber: true,
+                            validate: (v) => v > 0 || 'Unit price must be positive',
+                          })}
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                ))}
+                <div className="sm:col-span-2">
+                  <button
+                    type="button"
+                    onClick={() => append({ productName: '', quantity: 1, unitPrice: '' })}
+                    className="w-full rounded-xl border-2 border-dashed border-border bg-white/50 px-4 py-3 text-sm font-medium text-paragraph hover:text-primary hover:border-primary/40 transition-colors"
+                  >
+                    <Plus size={18} className="inline mr-1.5 align-text-bottom" /> Add another item
+                  </button>
+                </div>
+
                 <Field label="Tax (%)" error={errors.tax}>
                   <input
                     type="number"
