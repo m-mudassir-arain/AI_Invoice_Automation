@@ -70,7 +70,7 @@ export default function InvoiceForm() {
 
     setLoading(true)
     try {
-      const response = await fetch('https://n8n.srv1208284.hstgr.cloud/webhook-test/generate-invoice', {
+      const response = await fetch('https://n8n.srv1208284.hstgr.cloud/webhook/generate-invoice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
